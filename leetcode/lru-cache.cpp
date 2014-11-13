@@ -1,49 +1,31 @@
-struct Node {
-  int key, value;
-  Node *prev, *next;
-
-  Node* remove() {
-    prev->next = next;
-    next->prev = prev;
-    return this;
-  }
-
-  Node* insertBefore(Node *b) {
-    prev = (next = b)->prev;
-    return prev->next = b->prev = this;
-  }
-};
-
 class LRUCache {
 public:
-  LRUCache(int capacity) : cap_(capacity) {
-    head.next = &tail;
-    tail.prev = &head;
-  }
+  LRUCache(int capacity) : list_(capacity) {}
 
   int get(int key) {
     auto it = table_.find(key);
-    if (it != table_.end())
-      return it->second->remove()->insertBefore(&tail)->value;
-    return -1;
+    if (it == table_.end()) return -1;
+    return trans(it->second)->second;
   }
 
   void set(int key, int value) {
-    Node *x = head.next;
+    auto node = list_.begin();
     auto it = table_.find(key);
     if (it != table_.end())
-      x = it->second->remove();
-    else if (table_.size() == cap_)
-      table_.erase(x->remove()->key);
+      node = it->second;
     else
-      x = new Node;
-    x->key = key;
-    x->value = value;
-    table_[key] = x->insertBefore(&tail);
+      table_.erase((table_[key] = node)->first);
+    *trans(node) = { key, value };
   }
 
 private:
-  unordered_map<int, Node*> table_;
-  int cap_;
-  Node head, tail;
+  typedef list<pair<int, int>> List;
+
+  List::iterator trans(List::iterator node) {
+    list_.splice(list_.end(), list_, node);
+    return node;
+  }
+
+  unordered_map<int, List::iterator> table_;
+  List list_;
 };
