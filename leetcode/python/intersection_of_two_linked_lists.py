@@ -9,4 +9,4 @@ class Solution:
                 a, head_b = head_b, None
             if not b:
                 b, head_a = head_a, None
-        return b if a else None
+        return a and b
